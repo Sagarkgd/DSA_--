@@ -1,33 +1,39 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
 
 func main() {
-	// colors := map[string]string{ //creating map with some data.
-	// 	"red":   "#ff0000",			//red is the key and #ff0000 is the value of the key.
-	// 	"green": "#4bf745",
-	// }
-
-	// var colors map[string]string	//creating empty map.
-
-	// colors := make(map[string]string) // creating empty map using make(map[type]type).
-	// colors["shreyas"] = "narvekar"    //putting values
-	// fmt.Println(colors)
-	// delete(colors, "shreyas") //deleting values by passing map,key
-	// fmt.Println(colors)
-
-	colors := map[string]string{
-		"red":   "#ff0000",
-		"green": "#4bf745",
-		"white": "#ffffff",
+	links := []string{ //slice of string having links.
+		"http://google.com",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://golang.org",
+		"http://amazon.com",
+	}
+	c := make(chan string) //creating a channel of type string,using make keyword...
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+	for l := range c {
+		go func(link string) {
+			time.Sleep(5 * time.Second)
+			checkLink(link, c)
+		}(l)
 	}
 
-	printMap(colors)
-}
+}	
 
-func printMap(c map[string]string) {
-	for color, hex := range c {
-		fmt.Println(color, hex)
+func checkLink(link string, c chan string) { //func taking link string and channel of string type.
+	_, err := http.Get(link) //only checking if there is error.
+	if err != nil {
+		fmt.Println(link, "not working..") //printing error
+		c <- link                          //passing error message to channel.
+		return                             //if error occur return.
 	}
-
+	fmt.Println(link, "yes its working ") //if error doea not occurs
+	c <- link                             //passing string to channel.
 }
